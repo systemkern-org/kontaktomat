@@ -12,13 +12,12 @@ class KontactomatApplication: CommandLineRunner {
 		createMenu(listOf("Welcome user", "Read and chose an option to continue"))
 		while (optSelected != 5){
 			print("\n")
-			createMenu(listOf("1. Configure gmail id", "2.Centinue to oAuth", "5. Exit"))
+			createMenu(listOf("1. Configure gmail id", "2. Continue to oAuth", "5. Exit"))
 			optSelected = Integer.parseInt(readLine())
-			when(optSelected){
-				1 -> println("great 1")
-				2 -> println("great 2")
-			}
 
+			if(optSelected == 2){
+
+			}
 		}
 		System.exit(0)
 	}
