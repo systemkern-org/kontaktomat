@@ -21,7 +21,9 @@ dependencies {
 	implementation("org.springframework.security:spring-security-oauth2-client:5.1.5.RELEASE")
 	implementation("org.springframework.security:spring-security-oauth2-jose:5.1.5.RELEASE")
 	implementation("com.google.api-client:google-api-client:1.23.0")
-	implementation("com.google.oauth-client:google-oauth-client-jetty:1.23.0")
+	implementation("com.google.oauth-client:google-oauth-client-jetty:1.23.0"){
+		this.exclude("org.mortbay.jetty", "servlet-api")
+	}
 	implementation("com.google.apis:google-api-services-gmail:v1-rev83-1.23.0")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-web")
