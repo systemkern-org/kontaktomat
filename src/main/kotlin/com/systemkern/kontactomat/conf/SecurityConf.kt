@@ -33,7 +33,7 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                             response: HttpServletResponse,
                             authentication: Authentication
                     ) {
-                        redirectStrategy.sendRedirect(request, response, "/loginSuccess")
+                        redirectStrategy.sendRedirect(request, response, "/login-success")
                     }
                 })
                 .failureHandler(object: AuthenticationFailureHandler {
@@ -42,7 +42,7 @@ class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                             response: HttpServletResponse?,
                             exception: AuthenticationException?
                     ) {
-                        redirectStrategy.sendRedirect(request, response, "/loginFailure")
+                        redirectStrategy.sendRedirect(request, response, "/login-failure")
                     }
                 })
     }
