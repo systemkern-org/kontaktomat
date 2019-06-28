@@ -1,12 +1,14 @@
 package com.systemkern.kontactomat
 
+import com.systemkern.kontactomat.auth.AuthService
 import com.systemkern.kontactomat.mail.GmailService
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
 
 @Component
 class CommandLinesComponent(
-        private val gmailService: GmailService
+        private val gmailService: GmailService,
+        private val authService: AuthService
 ): CommandLineRunner {
 
     override fun run(vararg args: String?) {
@@ -18,7 +20,7 @@ class CommandLinesComponent(
             createMenu(listOf("1. Read gmail inbox", "5. Exit"))
             optSelected = Integer.parseInt(readLine())
 
-            if(gmailService.isAuthenticated){
+            if(authService.isUserAuthenticated){
                 when(optSelected){
                     1 -> gmailService.getInbox()
                 }
