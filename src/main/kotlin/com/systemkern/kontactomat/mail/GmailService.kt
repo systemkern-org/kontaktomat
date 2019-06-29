@@ -37,44 +37,44 @@ class GmailService(
     internal fun getSent() {
         println("----------------------------------------- SENT ----------------------------------------")
         gmail
-                .users()
-                .messages()
-                .list(userId)
-                .setQ("is:sent")
-                .setMaxResults(15)
-                .execute()
-                .messages?.map {
-            gmail.users()
+            .users()
+            .messages()
+            .list(userId)
+            .setQ("is:sent")
+            .setMaxResults(15)
+            .execute()
+            .messages?.map {
+                gmail.users()
                     .messages()
                     .get(userId, it.id)
                     .execute()
-        }?.forEach {
-            val from = it.payload.headers.filter { header -> header["name"] == "To" }.map { fromHeader -> fromHeader.value }
-            val emailDate = simpleDateFormat.format(it.internalDate)
-            println("Date: $emailDate     Sender: $from     Content: ${it.snippet}...")
-        }
+            }?.forEach {
+                val from = it.payload.headers.filter { header -> header["name"] == "To" }.map { fromHeader -> fromHeader.value }
+                val emailDate = simpleDateFormat.format(it.internalDate)
+                println("Date: $emailDate     Sender: $from     Content: ${it.snippet}...")
+            }
         println("------------------------------------------------------------------------------------------")
     }
 
     internal fun getFrom(from: String) {
         println("----------------------------------------- SENT ----------------------------------------")
         gmail
-                .users()
-                .threads()
-                .list(userId)
-                .setQ("from:$from")
-                .setMaxResults(15)
-                .execute()
-                .threads?.map {
-            gmail.users()
+            .users()
+            .threads()
+            .list(userId)
+            .setQ("from:$from")
+            .setMaxResults(15)
+            .execute()
+            .threads?.map {
+                gmail.users()
                     .threads()
                     .get(userId, it.id)
                     .execute()
-        }?.forEach {
-            val first = it.messages.first()
-            val emailDate = simpleDateFormat.format(first.internalDate)
-            println("Date: $emailDate    Content: ${first.snippet}...")
-        }
+            }?.forEach {
+                val first = it.messages.first()
+                val emailDate = simpleDateFormat.format(first.internalDate)
+                println("Date: $emailDate    Content: ${first.snippet}...")
+            }
         println("------------------------------------------------------------------------------------------")
     }
 
