@@ -12,21 +12,40 @@ class CommandLinesComponent(
 ): CommandLineRunner {
 
     override fun run(vararg args: String?) {
-        var optSelected: Int = -1
+        var optSelected: Int
         print("\n")
         createMenu(listOf("Welcome auth", "Read and chose an option to continue"))
+        createMenu(listOf("1. Login", "2. Provide token access and id"))
+        optSelected = Integer.parseInt(readLine())
+
+        when(optSelected){
+            1 -> println("Click in: http://localhost:8080/login")
+            2 -> {
+                println("Token id: ")
+                readLine()
+
+                println("Access token")
+                readLine()
+            }
+        }
+
         while (optSelected != 5) {
             print("\n")
-            createMenu(listOf("1. Read gmail inbox", "5. Exit"))
+            createMenu(listOf("1. Read gmail inbox", "2. Get sent", "3. Get messages by sender", "5. Exit"))
             optSelected = Integer.parseInt(readLine())
 
             if(authService.isUserAuthenticated){
                 when(optSelected){
                     1 -> gmailService.getInbox()
+                    2 -> gmailService.getSent()
+                    3 -> {
+                        createMenu(listOf("Type email to search for"))
+                        gmailService.getFrom(readLine()?: "")
+                    }
                 }
             }else{
                 println("Access not allowed, please authenticate in:")
-                println("http://localhost:8080")
+                println("http://localhost:8080/login")
             }
         }
         System.exit(0)
