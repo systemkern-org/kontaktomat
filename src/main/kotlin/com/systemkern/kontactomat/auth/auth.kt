@@ -2,10 +2,13 @@ package com.systemkern.kontactomat.auth
 
 import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl
 import com.google.api.client.auth.oauth2.Credential
+import com.google.api.client.auth.oauth2.TokenResponse
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
@@ -22,35 +25,27 @@ import org.springframework.web.servlet.view.RedirectView
 class authController(
         private val gmailService: GmailService,
         private val authService: AuthService
-){
+) {
     private val logger = LogFactory.getLog(this::class.java)
 
     @GetMapping("/login")
-    fun process()
-            = RedirectView(authService.authorize())
+    fun process() = RedirectView(authService.authorize())
 
     @GetMapping("/login-success", params = ["code"])
     fun showLoginSucessPage(@RequestParam(value = "code") code: String): String {
         logger.info("Setting Gmail client")
-        val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
-        gmailService.gmail = Gmail.Builder(
-                httpTransport,
-                JacksonFactory
-                        .getDefaultInstance(),
-                authService.buildCredentials(code))
-                .setApplicationName("KontaktoMat")
-                .build()
+        gmailService.gmail = gmailService.createClient(authService.buildCredentials(code))
+        gmailService.userId = getClient(authService.tokenId)
         authService.isUserAuthenticated = true
         logger.info("Gmail client was set successfully")
+
         return "loginSuccessV"
     }
 
 }
 
 @Service
-class AuthService(
-        private val gmailService: GmailService
-){
+class AuthService {
     var isUserAuthenticated: Boolean = false
 
     private val logger = LogFactory.getLog(this::class.java)
@@ -59,7 +54,7 @@ class AuthService(
     private lateinit var clientId: String
 
     @Value("\${google.client.client-secret}")
-    private lateinit var  clientSecret: String
+    private lateinit var clientSecret: String
 
     @Value("\${google.client.redirectUri}")
     private lateinit var redirectURI: String
@@ -68,6 +63,8 @@ class AuthService(
     private lateinit var scopes: Array<String>
 
     internal var flow: GoogleAuthorizationCodeFlow? = null
+
+    internal lateinit var tokenId: String
 
     @Throws(Exception::class)
     internal fun authorize(): String {
@@ -96,13 +93,22 @@ class AuthService(
         response as GoogleTokenResponse
         logger.info("This is your id: ${response.idToken}")
         logger.info("This is your access token: ${response.accessToken}")
-        val userId = response.parseIdToken()
-                .payload["sub"]
-                .toString()
-        gmailService.userId = userId
+
+        tokenId = response.idToken
         return flow?.createAndStoreCredential(
                 response,
-                userId
+                tokenId
         )
     }
+
+    internal fun buildCredentialsFromToken(accessToken: String) = GoogleCredential().setAccessToken(accessToken)
 }
+
+fun getClient(token: String) =
+        GoogleIdToken
+                .parse(
+                        JacksonFactory.getDefaultInstance(),
+                        token
+                )
+                .payload["sub"]
+                .toString()

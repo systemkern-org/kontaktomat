@@ -1,6 +1,10 @@
 package com.systemkern.kontactomat.mail
 
+import com.google.api.client.auth.oauth2.Credential
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.gmail.Gmail
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
 
@@ -10,6 +14,17 @@ class GmailService(
 ){
     internal lateinit var gmail: Gmail
     internal lateinit var userId: String
+    @Value("\${application.name}") lateinit var appName: String
+
+    fun createClient(credential: Credential?): Gmail =
+        Gmail.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(),
+                JacksonFactory
+                        .getDefaultInstance(),
+                credential)
+                .setApplicationName(appName)
+                .build()
+
 
     internal fun getInbox() {
         println("----------------------------------------- INBOX ----------------------------------------")
