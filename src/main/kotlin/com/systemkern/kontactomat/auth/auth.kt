@@ -1,8 +1,6 @@
 package com.systemkern.kontactomat.auth
 
-import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl
 import com.google.api.client.auth.oauth2.Credential
-import com.google.api.client.auth.oauth2.TokenResponse
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
@@ -12,8 +10,8 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
-import com.google.api.services.gmail.Gmail
 import com.systemkern.kontactomat.mail.GmailService
+import org.apache.commons.logging.Log
 import org.apache.commons.logging.LogFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -29,13 +27,13 @@ class authController(
     private val logger = LogFactory.getLog(this::class.java)
 
     @GetMapping("/login")
-    fun process() = RedirectView(authService.authorize())
+    fun process() = RedirectView(authService.authorize()?: throw Exception("No url"))
 
     @GetMapping("/login-success", params = ["code"])
     fun showLoginSucessPage(@RequestParam(value = "code") code: String): String {
         logger.info("Setting Gmail client")
         gmailService.gmail = gmailService.createClient(authService.buildCredentials(code))
-        gmailService.userId = getClient(authService.tokenId)
+        gmailService.userId = getClient(authService.tokenId?:  throw Exception("No token provided"))
         authService.isUserAuthenticated = true
         logger.info("Gmail client was set successfully")
 
@@ -45,10 +43,13 @@ class authController(
 }
 
 @Service
-class AuthService {
-    var isUserAuthenticated: Boolean = false
-
-    private val logger = LogFactory.getLog(this::class.java)
+class AuthService(
+        private val jacksonFactory: JacksonFactory = JacksonFactory.getDefaultInstance(),
+        var isUserAuthenticated: Boolean = false,
+        private val logger: Log? = LogFactory.getLog(AuthService::class.java),
+        internal var flow: GoogleAuthorizationCodeFlow? = null,
+        internal var tokenId: String? = null
+) {
 
     @Value("\${google.client.client-id}")
     private lateinit var clientId: String
@@ -62,13 +63,9 @@ class AuthService {
     @Value("\${google.client.scopes}")
     private lateinit var scopes: Array<String>
 
-    internal var flow: GoogleAuthorizationCodeFlow? = null
-
-    internal lateinit var tokenId: String
 
     @Throws(Exception::class)
-    internal fun authorize(): String {
-        val authorizationUrl: AuthorizationCodeRequestUrl
+    internal fun authorize(): String? {
         if (flow == null) {
             val web = GoogleClientSecrets.Details()
             web.clientId = clientId
@@ -77,24 +74,24 @@ class AuthService {
             val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
             flow = GoogleAuthorizationCodeFlow.Builder(
                     httpTransport,
-                    JacksonFactory
-                            .getDefaultInstance(),
+                    jacksonFactory,
                     clientSecrets,
                     scopes.asList())
                     .build()
         }
-        authorizationUrl = flow!!.newAuthorizationUrl().setRedirectUri(redirectURI)
-        logger.info("authorizationUrl: $authorizationUrl")
-        return authorizationUrl.build()
+        val authorizationUrl = flow?.newAuthorizationUrl()?.setRedirectUri(redirectURI)
+        logger?.info("authorizationUrl: $authorizationUrl")
+
+        return authorizationUrl?.build()
     }
 
     internal fun buildCredentials(code: String): Credential? {
         val response = flow?.newTokenRequest(code)?.setRedirectUri(redirectURI)?.execute()
         response as GoogleTokenResponse
-        logger.info("This is your id: ${response.idToken}")
-        logger.info("This is your access token: ${response.accessToken}")
-
+        logger?.info("This is your id: ${response.idToken}")
+        logger?.info("This is your access token: ${response.accessToken}")
         tokenId = response.idToken
+
         return flow?.createAndStoreCredential(
                 response,
                 tokenId

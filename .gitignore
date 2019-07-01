@@ -26,6 +26,7 @@ hs_err_pid*
 .gradle/
 .idea/
 out/
+build/
 
 *.iml
 credentials.json
