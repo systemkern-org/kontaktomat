@@ -14,6 +14,9 @@ import com.systemkern.kontactomat.mail.GmailService
 import org.apache.commons.logging.Log
 import org.apache.commons.logging.LogFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.view.RedirectView
